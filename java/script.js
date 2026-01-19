@@ -37,7 +37,7 @@ function formatTime(tsSeconds, tzOffsetSeconds) {
   return d.toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
-    timeZone: 'UTC' // 🔥 IMPORTANT
+    timeZone: 'UTC' //  IMPORTANT
   });
 }
 
@@ -110,5 +110,6 @@ searchBtn.addEventListener('click', doSearch);
 cityInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') doSearch();
 });
+
 
 
