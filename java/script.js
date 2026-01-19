@@ -1,6 +1,5 @@
 // Day 1 — Weather App
-// Replace with your OpenWeatherMap API key:
-const API_KEY = '7bf3f09e01f4eabee9483d21e48df0ed'; // <-- get a free key at openweathermap.org
+const API_KEY = '7bf3f09e01f4eabee9483d21e48df0ed';
 const ENDPOINT = 'https://api.openweathermap.org/data/2.5/weather';
 
 // DOM refs
@@ -32,76 +31,77 @@ function hideResult() {
   resultSection.classList.add('hidden');
 }
 
-// format unix timestamp + timezone offset to local time string
+//: format unix time correctly (NO double timezone)
 function formatTime(tsSeconds, tzOffsetSeconds) {
-  // tsSeconds is in UTC, tzOffsetSeconds is offset from UTC in seconds
   const d = new Date((tsSeconds + tzOffsetSeconds) * 1000);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'UTC' // 🔥 IMPORTANT
+  });
 }
 
-// format local time in city using timezone offset
+// city local time
 function cityLocalTime(tzOffsetSeconds) {
   const nowUtcSec = Math.floor(Date.now() / 1000);
   return formatTime(nowUtcSec, tzOffsetSeconds);
 }
 
-// build icon URL from OpenWeatherMap
+// weather icon
 function iconUrl(iconCode) {
   return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
 }
 
-// fetch weather for a city
+// fetch weather
 async function fetchWeather(city) {
-  try {
-    setStatus('Loading…');
-    hideResult();
-    const url = `${ENDPOINT}?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      if (res.status === 404) throw new Error('City not found');
-      throw new Error(`Network error ${res.status}`);
-    }
-    const data = await res.json();
-    return data;
-  } catch (err) {
-    throw err;
+  setStatus('Loading…');
+  hideResult();
+
+  const url = `${ENDPOINT}?q=${encodeURIComponent(city)}&units=metric&appid=${API_KEY}`;
+  const res = await fetch(url);
+
+  if (!res.ok) {
+    if (res.status === 404) throw new Error('City not found');
+    throw new Error('Something went wrong');
   }
+
+  return await res.json();
 }
 
-// render data to UI
+// render UI
 function renderWeather(data) {
-  // data structure: see OpenWeatherMap docs
   const { name, sys, weather, main, wind, timezone } = data;
-  const w = weather && weather[0];
+  const w = weather[0];
 
-  cityNameEl.textContent = `${name}, ${sys && sys.country ? sys.country : ''}`;
-  descEl.textContent = w ? (w.description || '').replace(/\b\w/g, s => s.toUpperCase()) : '';
-  tempEl.textContent = main ? Math.round(main.temp) : '—';
-  iconEl.src = w ? iconUrl(w.icon) : '';
-  iconEl.alt = w ? w.description : 'weather';
-  humidityEl.textContent = main ? main.humidity : '—';
-  windEl.textContent = wind ? (wind.speed + ' m/s') : '—';
-  sunriseEl.textContent = sys && sys.sunrise ? formatTime(sys.sunrise, timezone) : '—';
-  sunsetEl.textContent = sys && sys.sunset ? formatTime(sys.sunset, timezone) : '—';
+  cityNameEl.textContent = `${name}, ${sys.country}`;
+  descEl.textContent = w.description;
+  tempEl.textContent = Math.round(main.temp);
+  iconEl.src = iconUrl(w.icon);
+  humidityEl.textContent = main.humidity;
+  windEl.textContent = wind.speed + ' m/s';
+
+  //  sunrise & sunset
+  sunriseEl.textContent = formatTime(sys.sunrise, timezone);
+  sunsetEl.textContent = formatTime(sys.sunset, timezone);
   localTimeEl.textContent = cityLocalTime(timezone);
 
   showResult();
   setStatus('Weather loaded.');
 }
 
-// main search
+// search
 async function doSearch() {
-  const q = cityInput.value.trim();
-  if (!q) {
-    setStatus('Please enter a city.', true);
+  const city = cityInput.value.trim();
+  if (!city) {
+    setStatus('Please enter a city', true);
     return;
   }
+
   try {
-    const data = await fetchWeather(q);
+    const data = await fetchWeather(city);
     renderWeather(data);
   } catch (err) {
-    console.error(err);
-    setStatus(err.message || 'Failed to fetch weather.', true);
+    setStatus(err.message, true);
   }
 }
 
@@ -111,6 +111,4 @@ cityInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') doSearch();
 });
 
-// quick demo: optional - load a default city on start
-// (uncomment to auto-load)
-// window.addEventListener('load', () => { cityInput.value = 'Mumbai'; doSearch(); });
+
