@@ -95,4 +95,4 @@ To run the project in your local environment, follow these steps:
 
 ## 🎥 Video
 
-https://github.com/Mahnoor-younas/Weather-checker-.git
+https://github.com/user-attachments/assets/2b65c41d-69e0-48ea-bac0-f161888de85f
